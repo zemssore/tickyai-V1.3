@@ -552,6 +552,19 @@ export class NotificationService {
 
       for (const dependency of activeDependencies) {
         try {
+          // Дополнительная проверка: повторно проверяем статус перед отправкой
+          // Это предотвращает отправку уведомлений для зависимостей, которые были остановлены
+          const currentDependency = await this.prisma.dependencySupport.findUnique({
+            where: { id: dependency.id },
+          });
+
+          if (!currentDependency || currentDependency.status !== 'ACTIVE') {
+            this.logger.log(
+              `Skipping morning message for dependency ${dependency.id} - status is not ACTIVE`,
+            );
+            continue;
+          }
+
           const motivation = this.generateMorningMotivation(dependency.type);
 
           await this.telegramBotService.sendMessageToUser(
@@ -573,8 +586,12 @@ export class NotificationService {
           );
 
           // Обновляем статистику и отмечаем время отправки
-          await this.prisma.dependencySupport.update({
-            where: { id: dependency.id },
+          // Повторно проверяем статус перед обновлением
+          await this.prisma.dependencySupport.updateMany({
+            where: {
+              id: dependency.id,
+              status: 'ACTIVE', // Обновляем только если статус все еще ACTIVE
+            },
             data: {
               totalPromises: dependency.totalPromises + 1,
               lastMorningSent: new Date(), // Mark when we sent morning message
@@ -609,6 +626,19 @@ export class NotificationService {
 
       for (const dependency of activeDependencies) {
         try {
+          // Дополнительная проверка: повторно проверяем статус перед отправкой
+          // Это предотвращает отправку уведомлений для зависимостей, которые были остановлены
+          const currentDependency = await this.prisma.dependencySupport.findUnique({
+            where: { id: dependency.id },
+          });
+
+          if (!currentDependency || currentDependency.status !== 'ACTIVE') {
+            this.logger.log(
+              `Skipping evening message for dependency ${dependency.id} - status is not ACTIVE`,
+            );
+            continue;
+          }
+
           const checkMessage = this.generateEveningCheck(dependency.type);
 
           await this.telegramBotService.sendMessageToUser(
