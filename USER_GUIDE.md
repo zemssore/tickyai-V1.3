@@ -232,6 +232,5 @@ npm run prisma:migrate
 - Telegram: [@Gexxx1](https://t.me/Gexxx1) (по умолчанию)
 - Или измените `SUPPORT_TELEGRAM` в `.env`
 
-## Деплой в production
 
 В принципе все
